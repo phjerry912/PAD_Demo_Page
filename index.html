@@ -20,7 +20,7 @@
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       text-align: center;
-      max-width: 400px;
+      max-width: 420px;
       width: 90%;
     }
     h2 {
@@ -32,29 +32,82 @@
       color: #666;
       font-size: 14px;
       margin-bottom: 24px;
+      line-height: 1.5;
     }
     .btn {
       display: inline-block;
-      background-color: #0078d4; /* 類似 Microsoft 365 風格藍色 */
+      background-color: #0078d4;
       color: white;
-      text-decoration: none;
-      padding: 12px 24px;
+      border: none;
+      padding: 12px 28px;
       font-size: 15px;
       font-weight: 500;
       border-radius: 4px;
-      transition: background-color 0.2s;
+      cursor: pointer;
+      transition: background-color 0.2s, opacity 0.2s;
     }
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       background-color: #106ebe;
+    }
+    .btn:disabled {
+      background-color: #8a8886;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+    .status-msg {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #0078d4;
+      min-height: 20px;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>業務月度數據匯出</h2>
-    <p>請點擊下方按鈕下載最新 CSV 報表資料檔案。</p>
-    <!-- 將 data.csv 放在與 index.html 相同目錄即可 -->
-    <a href="data.csv" download="training_sample_data.csv" class="btn">下載 CSV 報表</a>
+    <p>系統需要約 10 秒彙整即時資料，請點擊下方按鈕開始產生報表。</p>
+    
+    <button id="downloadBtn" class="btn" onclick="startDelayedDownload()">下載 CSV 報表</button>
+    <div id="statusMsg" class="status-msg"></div>
   </div>
+
+  <script>
+    function startDelayedDownload() {
+      const btn = document.getElementById('downloadBtn');
+      const statusMsg = document.getElementById('statusMsg');
+      let countdown = 10; // 設定等待秒數
+
+      // 1. 停用按鈕，避免重複點擊
+      btn.disabled = true;
+      btn.innerText = `資料彙整中 (${countdown}s)...`;
+      statusMsg.innerText = "正在從資料庫讀取最新數據，請稍候...";
+
+      // 2. 倒數計時動畫（每秒更新文字）
+      const timer = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          btn.innerText = `資料彙整中 (${countdown}s)...`;
+        } else {
+          clearInterval(timer);
+          btn.innerText = "下載完成！";
+          statusMsg.innerText = "檔案已開始下載至本機。";
+
+          // 3. 滿 10 秒後，動態建立連結觸發下載
+          const link = document.createElement('a');
+          link.href = 'data.csv'; // 指向你的 CSV 檔名
+          link.download = 'training_sample_data'; // 下載存檔時顯示的檔名
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          // 3 秒後恢復按鈕狀態
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.innerText = "重新下載 CSV 報表";
+          }, 3000);
+        }
+      }, 1000);
+    }
+  </script>
 </body>
 </html>
